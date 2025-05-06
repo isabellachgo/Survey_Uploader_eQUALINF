@@ -1,1 +1,0 @@
-# Survey_Uploader_eQUALINF

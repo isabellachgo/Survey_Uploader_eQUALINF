@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+
+  backend:
+    build:
+      context: ./backend
+    image: tfg-backend:latest
+    container_name: tfg-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3306/pac_db_2024_2025
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - frontend  # (opcional, puedes quitarlo si no depende del frontend)
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: http://backend:8080
+    image: tfg-frontend:latest
+    container_name: tfg-frontend
+    ports:
+      - "3000:80"

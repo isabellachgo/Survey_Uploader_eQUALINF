@@ -46,7 +46,7 @@ const FileMappingContainer = () => {
                 setAttributes(aData);
                 if (fData.sheetNames && fData.sheetNames.length > 0) {
                     setSheetNames(fData.sheetNames);
-                    setSelectedSheet(fData.sheetNames[0]); // ← esta línea selecciona automáticamente la primera hoja
+                    setSelectedSheet(fData.sheetNames[0]); //  esta línea selecciona automáticamente la primera hoja
                 } else {
                     setData(fData || []);
                 }
@@ -65,17 +65,6 @@ const FileMappingContainer = () => {
             setIndicadores([]);
         }
     }, [selectedProcess]);
-
-    // Una vez cargado los atributos ver posibles valores
-    /*useEffect(() => {
-        if (selectedAttribute) {
-            getPossibleValues(selectedAttribute)
-                .then(setPossibleValues)
-                .catch(console.error);
-        } else {
-            setPossibleValues([]);
-        }
-    }, [selectedAttribute]);*/
 
     // Al cambia de hoja llamar al metodo de la clase de comunicaciones
     useEffect(() => {
@@ -137,8 +126,8 @@ const FileMappingContainer = () => {
         setHasSubmitted(true); // ← Marca que el usuario ha intentado enviar
         const errors = {};
 
-        if (!selectedAttribute) errors.selectedAttribute = "Campo obligatorio";
-        //if (!selectedPossibleValue) errors.selectedPossibleValue = "Campo obligatorio";
+      //  if (!selectedAttribute) errors.selectedAttribute = "Campo obligatorio";
+        if ( selectedAttribute && !selectedPossibleValue) errors.selectedPossibleValue = "Campo obligatorio";
         if (!selectedDate) errors.selectedDate = "Campo obligatorio";
         const mappedCols = Object.entries(columnToIndicadorMap);
         if (!selectedAcademicYearColumn) errors.selectedAcademicYearColumn = "Campo obligatorio";
@@ -174,7 +163,7 @@ const FileMappingContainer = () => {
     return (
         <div className="table-view-container">
             <div className="prev-card">
-                <h1>Previsualización</h1>
+                <h1>Procesado y mapeo</h1>
 
                 <ProcessSelector
                     processes={processes}
@@ -184,6 +173,11 @@ const FileMappingContainer = () => {
 
                 {selectedProcess ? (
                     <>
+                        <SheetSelector
+                            sheetNames={sheetNames}
+                            selectedSheet={selectedSheet}
+                            onChange={setSelectedSheet}
+                        />
                         <AttributeSelector
                             attributes={attributes}
                             selectedAttribute={selectedAttribute}
@@ -191,7 +185,7 @@ const FileMappingContainer = () => {
                             possibleValues={possibleValues}
                             selectedValue={selectedPossibleValue}
                             onValueChange={setSelectedPossibleValue}
-                            attributeError={errorMessage.selectedAttribute}
+                            error={errorMessage.selectedPossibleValue}
                             data={data}
                         />
                         <DateSelector
@@ -206,11 +200,7 @@ const FileMappingContainer = () => {
                             onChange={setSelectedAcademicYearColumn}
                             error={errorMessage.selectedAcademicYearColumn}
                         />
-                        <SheetSelector
-                            sheetNames={sheetNames}
-                            selectedSheet={selectedSheet}
-                            onChange={setSelectedSheet}
-                        />
+
                         <DataTable
                             data={data}
                             rowsToShow={rowsToShow}

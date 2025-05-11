@@ -677,10 +677,11 @@ margin: auto;
     color: #333;
     text-align: left;
 }
-.attribute-select.input-error, .date-input.input-error,.indicador-dropdown.input-error {
+.date-input.input-error,.indicador-dropdown.input-error,
+.value-select.input-error, .academic-year-select.input-error {
     border: 2px solid red ;
 }
-.attribute-selector .error-text, .date-selector .error-text, .selected-columns .error-text {
+.attribute-selector .error-text, .date-selector .error-text, .selected-columns .error-text, .possible-value-group .error-text ,.academic-year-selector .error-text{
     color: red;
     font-size: 0.75rem;
     align-content: center;

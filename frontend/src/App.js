@@ -1,6 +1,6 @@
 import React from "react";
 
-import FileUploadForm from "./components/FileUploadForm"; // Importa tu componente
+import FileUploadForm from "./components/FileUploadContainer"; // Importa tu componente
 
 //import "./selectFile.css"; 
 //import './index.css';

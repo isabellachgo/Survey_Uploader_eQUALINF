@@ -15,29 +15,26 @@ import java.util.stream.Collectors;
 @Service
 public class DBManagerService {
 
-    private final Map<String, JdbcTemplate> plantillasPorAnyo = new HashMap<>();
+    private final Map<String, JdbcTemplate> yearTemplate = new HashMap<>();
 
     public DBManagerService() throws IOException {
         Properties props = new Properties();
-      //  props.load(new FileInputStream("src/main/resources/db-config.properties"));
         props.load(getClass().getClassLoader().getResourceAsStream("db-config.properties"));
 
-        Set<String> anyos = props.stringPropertyNames().stream()
-                .map(key -> key.split("\\.")[1])
-                .collect(Collectors.toSet());
+        Set<String> years = props.stringPropertyNames().stream().map(key -> key.split("\\.")[1]).collect(Collectors.toSet());
 
-        for (String anyo : anyos) {
-            String url = props.getProperty("db." + anyo + ".url");
-            String username = props.getProperty("db." + anyo + ".username");
-            String password = props.getProperty("db." + anyo + ".password");
+        for (String year : years) {
+            String url = props.getProperty("db." + year + ".url");
+            String username = props.getProperty("db." + year + ".username");
+            String password = props.getProperty("db." + year + ".password");
 
             DriverManagerDataSource dataSource = new DriverManagerDataSource(url, username, password);
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-            plantillasPorAnyo.put(anyo, jdbcTemplate);
+            yearTemplate.put(year, jdbcTemplate);
         }
     }
 
-    public JdbcTemplate getJdbcTemplate(String anyo) {
-        return plantillasPorAnyo.get(anyo);
+    public JdbcTemplate getJdbcTemplate(String year) {
+        return yearTemplate.get(year);
     }
 }

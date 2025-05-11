@@ -1,6 +1,8 @@
 
 import React from 'react';
 
+
+
 // Selector de procesos
 export function ProcessSelector({ processes, selectedProcess, onChange }) {
     return (
@@ -24,7 +26,7 @@ export function ProcessSelector({ processes, selectedProcess, onChange }) {
 }
 
 // Selector de atributos y valores posibles
-export function AttributeSelector({attributes, selectedAttribute, onAttributeChange, possibleValues, selectedValue, onValueChange,attributeError, data}) {
+export function AttributeSelector({attributes, selectedAttribute, onAttributeChange, possibleValues, selectedValue, onValueChange,error, data}) {
     return (
         <div className="attribute-selector">
             <div className="attribute-group">
@@ -33,7 +35,8 @@ export function AttributeSelector({attributes, selectedAttribute, onAttributeCha
                     id="attributeSelect"
                     value={selectedAttribute}
                     onChange={e => onAttributeChange(e.target.value)}
-                    className={`attribute-select ${attributeError ? "input-error" : ""}`}
+                   // className={`attribute-select ${attributeError ? "input-error" : ""}`}   abajo attributeError && <p className="error-text">{attributeError}</p>
+                    className="attibute-select"
                 >
                     <option value="">-- Seleccione un atributo --</option>
                     {attributes.map(a => (
@@ -42,16 +45,17 @@ export function AttributeSelector({attributes, selectedAttribute, onAttributeCha
                         </option>
                     ))}
                 </select>
-                {attributeError && <p className="error-text">{attributeError}</p>}
+
             </div>
             {selectedAttribute && (
                 <div className="possible-value-group">
-                    <label htmlFor="possibleValueSelect">Selecciona la columna con los valores del atributo:</label>
+                    <label htmlFor="possibleValueSelect">Selecciona cuál columna con los valores del atributo:</label>
                     <select
                         id="possibleValueSelect"
                         value={selectedValue}
                         onChange={e => onValueChange(e.target.value)}
-                        className="value-select"
+                        //className="value-select"
+                        className={`value-select ${error ? "input-error" : ""}`}
                     >
                         <option value="">-- Seleccione una columna --</option>
                         {data.length > 0 && Object.keys(data[0]).map((col, index) => (
@@ -60,6 +64,7 @@ export function AttributeSelector({attributes, selectedAttribute, onAttributeCha
                             </option>
                         ))}
                     </select>
+                    {error && <p className="error-text">{error}</p>}
                 </div>
             )}
         </div>
@@ -70,7 +75,7 @@ export function AttributeSelector({attributes, selectedAttribute, onAttributeCha
 export function DateSelector({ selectedDate, onChange,error }) {
     return (
         <div className="date-selector">
-            <label htmlFor="dateInput">Escoge una fecha:</label>
+            <label htmlFor="dateInput">Escoge la fecha de subida:</label>
             <input
                 type="date"
                 id="dateInput"
@@ -87,11 +92,12 @@ export function DateSelector({ selectedDate, onChange,error }) {
 export function AcademicYearColumnSelector({ data, selectedYear, onChange, error }) {
     return (
         <div className="academic-year-selector">
-            <label htmlFor="academicYearSelect">Selecciona la columna del año académico:</label>
+            <label htmlFor="academicYearSelect">Selecciona el nombre de la columna  que corresponde con el año académico:</label>
             <select
                 id="academicYearSelect"
                 value={selectedYear}
                 onChange={(e) => onChange(e.target.value)}
+                className={`academic-year-select ${error ? "input-error" : ""}`}
             >
                 <option value="">-- Seleccione una columna --</option>
                 {data.length > 0 &&
@@ -103,7 +109,7 @@ export function AcademicYearColumnSelector({ data, selectedYear, onChange, error
             </select>
 
             {/* Mensaje de error visual */}
-            {error && <p className="error-message">{error}</p>}
+            {error && <p className="error-text">{error}</p>}
         </div>
     );
 }
@@ -140,6 +146,9 @@ export function DataTable({data, rowsToShow, selectedColumns, onHeaderClick, sho
     const headers = Object.keys(data[0]);
     return (
         <>
+            <div className="column-instructions">
+                <p>Haz clic en cualquier celda o encabezado para seleccionar o deseleccionar la columna que quiere mapear.</p>
+            </div>
             <div className="table-container">
                 <table className="w-full">
                     <thead>
@@ -170,7 +179,7 @@ export function DataTable({data, rowsToShow, selectedColumns, onHeaderClick, sho
                                 <td
                                     key={col}
                                     onClick={() => onHeaderClick(col)}
-                                    style={{ cursor: 'pointer' }}
+                                    style={{cursor: 'pointer'}}
                                 >
                                     {row[col]}
                                 </td>
@@ -192,15 +201,18 @@ export function DataTable({data, rowsToShow, selectedColumns, onHeaderClick, sho
                     </button>
                 )}
             </div>
-            <div className="column-instructions">
-                <p>Haz clic en cualquier celda o encabezado para seleccionar o deseleccionar la columna.</p>
-            </div>
+
         </>
     );
 }
 
 // Panel de columnas seleccionadas
-export function SelectedColumnsPanel({selectedColumns, columnToIndicadorMap, indicadores, onIndicatorChange, onRemoveColumn, error, hasSubmitted}) {
+export function SelectedColumnsPanel({
+                                         selectedColumns,
+                                         columnToIndicadorMap,
+                                         indicadores,
+                                         onIndicatorChange,
+                                         onRemoveColumn, error, hasSubmitted}) {
     if (!Object.keys(selectedColumns).length && !error) return null;
     return (
         <div className="selected-columns-container">
@@ -271,7 +283,7 @@ export function UploadFeedback({ uploadResults }) {
                                                         ) : (
                                                             <span className="flex items-center">
                                   <img
-                                      src="/icons/cross.png"
+                                      src="/icons/red-cross.png"
                                       alt="Marca de error"
                                       className="w-5 h-5 text-red-500 flex-shrink-0"
                                   />

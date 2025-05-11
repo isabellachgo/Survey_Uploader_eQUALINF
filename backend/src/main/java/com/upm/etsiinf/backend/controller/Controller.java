@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
 import java.util.*;
@@ -51,10 +52,23 @@ public class Controller {
                 // Procesar todas las hojas del Excel
                 Map<String, List<Map<String, String>>> sheetsData = previsualizationService.previsualizeExcelAllSheets(file); // Guarda el nombre de la hoja y su previsualizacion
                 fileStorageService.saveExcelFile(fileId, sheetsData); // lo guardo para poder luego trbajar sobre el
-                // Se establece como hoja por defecto la primera
-                String defaultSheet = sheetsData.keySet().iterator().next();
-                response.put("parsedData", sheetsData.get(defaultSheet));
-                response.put("sheetNames", new ArrayList<>(sheetsData.keySet()));
+                // Se establece por defecto la primera hoja valida
+                // Filtro hojas válidas
+                Map<String, List<Map<String, String>>> validSheets = new LinkedHashMap<>();
+                for (Map.Entry<String, List<Map<String, String>>> entry : sheetsData.entrySet()) {
+                    if (FilePreviewService.isValid(entry.getValue())) {
+                        validSheets.put(entry.getKey(), entry.getValue());
+                        System.out.println("Valid: " + entry.getKey());
+                    }
+                }
+                if (validSheets.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay hojas válidas para previsualizar.");
+                }
+
+                // Usar la primera hoja válida como predeterminada
+                String defaultSheet = validSheets.keySet().iterator().next();
+                response.put("parsedData", validSheets.get(defaultSheet));
+                response.put("sheetNames", new ArrayList<>(validSheets.keySet()));
             } else {
                 throw new IllegalArgumentException("Formato de archivo no soportado. Solo se admiten CSV y Excel.");
             }
@@ -85,7 +99,7 @@ public class Controller {
     }
 
     /**
-     * Método para devolver la info de un fichero previamente almacenado (LLAMA AL FRONNTED PARA PREVISUALIZARLO).
+     * Método para devolver la info de un fichero previamente almacenado.
      */
     @GetMapping("/{fileId}")
     public ResponseEntity<?> getFileData(@PathVariable("fileId") String fileId) {
@@ -156,7 +170,7 @@ public class Controller {
 
 
     /**
-     * Metodo que sube las columnas seleccionadas al indicador corresondiente en la bbdd.
+     * Metodo que sube las columnas seleccionadas al indicador correspondiente en la bbdd.
      */
 
     @PostMapping("/updateInd")
@@ -194,7 +208,7 @@ public class Controller {
             // Intentar recuperar datos preprocesados (CSV).
             List<Map<String, String>> csvData = fileStorageService.getCSVFile(fileId);
             if (csvData != null) {
-                resultado = fileProcessingService.filtrarDatos(csvData, mapeoColumnas,academicYearColumn);
+                resultado = fileProcessingService.dataFilter(csvData, mapeoColumnas,academicYearColumn);
             } else {
                 // Si no es CSV, probar con Excel.
                 Map<String, List<Map<String, String>>> excelData = fileStorageService.getExcelFile(fileId);
@@ -204,14 +218,14 @@ public class Controller {
                         nombreHoja = excelData.keySet().iterator().next();
                     }
                     List<Map<String, String>> sheetData = excelData.get(nombreHoja);
-                    resultado = fileProcessingService.filtrarDatos(sheetData, mapeoColumnas,academicYearColumn);
+                    resultado = fileProcessingService.dataFilter(sheetData, mapeoColumnas,academicYearColumn);
                 }
             }
 
             if (resultado == null) {
                 throw new IllegalArgumentException("No se pudieron recuperar datos para el fileId: " + fileId);
             }
-
+            System.out.println(attribute);
 
 // Actualizar indicator_instance usando el mapeo y los datos filtrados.
            List<UpdateResult> res= databaseService.actualizarIndicatorInstance(processId, mapeoColumnas, resultado, date, attribute, possibleValue, academicYearColumn);

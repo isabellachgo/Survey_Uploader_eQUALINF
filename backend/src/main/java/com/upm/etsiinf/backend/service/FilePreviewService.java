@@ -70,11 +70,27 @@ public class FilePreviewService {
         Map<String, List<Map<String, String>>> sheetsData = new LinkedHashMap<>();
         try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
             for (Sheet sheet : wb) {
-                sheetsData.put(sheet.getSheetName(), processSheet(sheet));
+                try {
+                    List<Map<String, String>> sheetPreview = processSheet(sheet);
+                    sheetsData.put(sheet.getSheetName(), sheetPreview);
+                } catch (IllegalArgumentException e) {
+                    // Cabecera no encontrada, se ignora la hoja
+                    System.out.println("Hoja ignorada por falta de cabecera: " + sheet.getSheetName());
+                }
             }
         }
         return sheetsData;
     }
+
+    /*public Map<String, List<Map<String, String>>> previsualizeExcelAllSheets(MultipartFile file) throws IOException {
+        Map<String, List<Map<String, String>>> sheetsData = new LinkedHashMap<>();
+        try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
+            for (Sheet sheet : wb) {
+                sheetsData.put(sheet.getSheetName(), processSheet(sheet));
+            }
+        }
+        return sheetsData;
+    }*/
 
     private List<Map<String, String>> processSheet(Sheet sheet) {
         List<Map<String, String>> data = new ArrayList<>();
@@ -149,4 +165,11 @@ public class FilePreviewService {
         }
         return textCount > 1 && textCount >= numCount && nextNum >= nextText;
     }
+
+public static boolean isValid(List<Map<String, String>> sheetData) {
+        // Es válida si tiene al menos una fila de datos
+        return sheetData != null && !sheetData.isEmpty();
+    }
+
+
 }

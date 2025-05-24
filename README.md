@@ -98,4 +98,5 @@ estos parámetros no serían necesarios.
 
 📌 Licencia y autoría
 Este proyecto ha sido desarrollado como parte del Trabajo Fin de Grado en la Escuela Técnica Superior de Ingenieros Informáticos de la Universidad Politécnica de Madrid
+---
 Isabella Chaves Gómez

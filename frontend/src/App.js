@@ -1,9 +1,5 @@
 import React from "react";
-
 import FileUploadForm from "./components/FileUploadContainer"; // Importa tu componente
-
-//import "./selectFile.css"; 
-//import './index.css';
 import "./styles/styles.css";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import FileMappingContainer from "./components/FileMappingContainer";

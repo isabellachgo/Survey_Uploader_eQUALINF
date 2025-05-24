@@ -21,27 +21,25 @@ import java.util.Map;
 public class FilePreviewService {
 
     /**
-     * Previsualiza un CSV usando OpenCSV y devuelve lista de mapas header→valor,
-     * preservando el orden de las columnas tal cual aparecen en el archivo.
+     * Previsualiza el contenido de un archivo CSV subido por el usuario.
+     *  <p>
+     *  Lee las  filas del archivo y devuelve su contenido como una lista de mapas, donde cada mapa representa una fila del CSV
+     *  con sus pares clave-valor (nombre de columna → valor de celda).
+     * @param file
+     * @return  Lista de mapas representando las filas del archivo.
+     * @throws IOException
      */
     public List<Map<String, String>> previsualizeCSV(MultipartFile file) throws IOException {
         List<Map<String, String>> rows = new ArrayList<>();
-        CSVParser parser = new CSVParserBuilder()
-                .withSeparator(';')
-                .build();
-
-        try (
-                InputStreamReader isr = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
-                CSVReader reader = new CSVReaderBuilder(isr)
-                        .withCSVParser(parser)
-                        .build()
-        ) {
+        CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
+        try (InputStreamReader isr = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8); //lector de caracteres de archivo
+             CSVReader reader = new CSVReaderBuilder(isr).withCSVParser(parser).build()) { //lector de csv
             // Leer cabecera
             String[] headersLine = reader.readNext();
             if (headersLine == null) {
                 return rows; // CSV vacío
             }
-            List<String> headers = new ArrayList<>();
+            List<String> headers = new ArrayList<>(); // lista con los encabezados
             for (String header : headersLine) {
                 headers.add(header.trim());
             }
@@ -59,12 +57,17 @@ public class FilePreviewService {
         } catch (CsvValidationException e) {
             throw new IOException("Error validando CSV", e);
         }
-
         return rows;
     }
 
     /**
      * Previsualiza todas las hojas de un archivo Excel con Apache POI.
+     * <p>
+     * Para cada hoja, se construye una lista de mapas, donde cada mapa representa una fila del Excel
+     * como pares clave-valor (nombre de columna → valor de celda).
+     * @param file
+     * @return Un mapa donde cada clave es el nombre de una hoja, y su valor es la lista de filas representadas como mapas.
+     * @throws IOException
      */
     public Map<String, List<Map<String, String>>> previsualizeExcelAllSheets(MultipartFile file) throws IOException {
         Map<String, List<Map<String, String>>> sheetsData = new LinkedHashMap<>();
@@ -82,16 +85,22 @@ public class FilePreviewService {
         return sheetsData;
     }
 
-    /*public Map<String, List<Map<String, String>>> previsualizeExcelAllSheets(MultipartFile file) throws IOException {
-        Map<String, List<Map<String, String>>> sheetsData = new LinkedHashMap<>();
-        try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
-            for (Sheet sheet : wb) {
-                sheetsData.put(sheet.getSheetName(), processSheet(sheet));
-            }
-        }
-        return sheetsData;
-    }*/
+    /**
+     * Comprueba si la información de una hoja tiene un formato correcto (tabular).
+     * @param sheetData
+     * @return  {@code true} si es una hoja válida; {@code false} en caso contrario.
+     */
+    public static boolean isValidSheet(List<Map<String, String>> sheetData) {
+        // Es válida si tiene al menos una fila de datos
+        return sheetData != null && !sheetData.isEmpty();
+    }
 
+    /**
+     * Lee una hoja de excel.
+     * Para cada fila guarda en un mapanpares clave-valor (nombre de columna → valor de celda).
+     * @param sheet
+     * @return Lista de mapas representando las filas del archivo.
+     */
     private List<Map<String, String>> processSheet(Sheet sheet) {
         List<Map<String, String>> data = new ArrayList<>();
         DataFormatter formatter = new DataFormatter();
@@ -104,8 +113,8 @@ public class FilePreviewService {
         // Obtener nombres de columna
         Row headerRow = sheet.getRow(headerRowIndex);
         List<String> headers = new ArrayList<>();
-        for (int c = 0; c < headerRow.getLastCellNum(); c++) {
-            Cell cell = headerRow.getCell(c, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+        for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+            Cell cell = headerRow.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
             headers.add(formatter.formatCellValue(cell).trim());
         }
 
@@ -126,12 +135,18 @@ public class FilePreviewService {
         return data;
     }
 
+    /**
+     * Busca la fila donde empieza el encabezado del excel, ya que estos suelen traer información y/o isntrucciones antes.
+     * <p> compara cada fila con la siguiente, evaluando si la fila actual podría representar un encabezado y si la siguiente contiene datos
+     * @param sheet
+     * @return Indice de la fila que contiene los encabezados.
+     */
     private int detectHeader(Sheet sheet) {
         int maxCols = 0;
         for (int i = 0; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
-                maxCols = Math.max(maxCols, row.getLastCellNum());
+                maxCols = Math.max(maxCols, row.getLastCellNum()); //compara una fila con la siguiente
             }
         }
         for (int i = 0; i < sheet.getLastRowNum(); i++) {
@@ -144,6 +159,14 @@ public class FilePreviewService {
         return -1;
     }
 
+    /**
+     * Verifica que una fila es un encabezado.
+     * <p> La fila de encabezados contiene más textos y la fila que le sigue más datos.
+     * @param row
+     * @param nextRow
+     * @param cols
+     * @return {@code true} si es uuna fila de encabezado válida {@code false} en caso contrario.
+     */
     private boolean isValidHeaderRow(Row row, Row nextRow, int cols) {
         int textCount = 0, numCount = 0;
         for (int c = 0; c < cols; c++) {
@@ -163,13 +186,7 @@ public class FilePreviewService {
                 nextNum++;
             }
         }
-        return textCount > 1 && textCount >= numCount && nextNum >= nextText;
+        return textCount > 1 && textCount >= numCount && nextNum >= nextText; // Si la fila candidata a encabezado tiene al menos dos celdas con texto, y tiene mas celdas de texto que datos númericos
+                                                                              // la fila siguiente contiene más datos númericos que descriptivos
     }
-
-public static boolean isValid(List<Map<String, String>> sheetData) {
-        // Es válida si tiene al menos una fila de datos
-        return sheetData != null && !sheetData.isEmpty();
-    }
-
-
 }

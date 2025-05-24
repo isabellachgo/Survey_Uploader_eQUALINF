@@ -22,15 +22,25 @@ public class DatabaseService {
         this.gestor = gestor;
     }
 
-
-    public List<Map<String, Object>> obtenerProcesos() {
-      //  String sql = "SELECT id, type, coding, process_name, version, approval_date, is_subprocess FROM process";
+/**
+ * Consulta los procesos de la base de datos por defecto, especificada en el archivo 'application-properties'.
+ * @return Lista de  mapas, donde cada mapa es un proceso con los campos (id, coding, process_name).
+ */
+    public List<Map<String, Object>> getProcesses() {
         String sql = "SELECT id, coding, process_name FROM process";
         return defaultJdbcTemplate.queryForList(sql);
     }
 
-    public List<Map<String, Object>> obtenerIndicadoresPorProceso(int processId) {
-      //  String sql = "SELECT i.id, i.coding, i.indicator_name, i.description, i.calc_method, i.period, i.type, i.standard, " +
+/**
+ * Obtiene la lista de indicadores asociados a un proceso específico.
+ * <p>Realiza una consulta SQL que une las tablas <code>indicator</code> e
+ *    <code>indicator_group</code>, filtrando por el ID del proceso.
+ *</p>
+ * @param processId ID del proceso cuyos indicadores se desean consultar.
+ * @return Una lista de mapas, donde cada mapa contiene los campos:id, coding, indicator_name, indicator_group_id,
+ * ig_coding e indicator_group_name.
+ */
+    public List<Map<String, Object>> getIndicatorsbyProcess(int processId) {
         String sql = "SELECT i.id, i.coding, i.indicator_name, " +
                 "ig.id as indicator_group_id, ig.coding as ig_coding, ig.indicator_group_name " +
                 "FROM indicator i " +
@@ -39,7 +49,40 @@ public class DatabaseService {
         return defaultJdbcTemplate.queryForList(sql, processId);
     }
 
-    public List<UpdateResult> actualizarIndicatorInstance(
+    /**
+     * Consulta los atributos de la base de datos por defecto, especificada en el archivo 'application-properties'.
+     * @return Lista de  mapas, donde cada mapa es un atributo con los campos (id, coding, description).
+     */
+    public List<Map<String, Object>> getAttributes() {
+        String sql = "SELECT id, coding, description, position FROM attribute";
+        return defaultJdbcTemplate.queryForList(sql);
+    }
+
+    /**
+     *  Actualiza el valor de los indicadores mapeados por el usuario, comprobando
+     *  si el indicador existe y si su código sigue el formato esperado.
+     *  <p> Por cada fila:
+     *  -se toma el valor de 'columnaAnoAcademico' y se conecta a esa base de datos.
+     * - se recupera el codigo del 'processId'
+     * - Para cada columna asociada a un indicador, se obtiene el codigo interno del indicador
+     * - se construye el codigo del InidcadorInstance a buscar:
+     *   + Si no hay atributo: código_proceso - código_indicador
+     *   + Si hay un atributo: código_proceso - código_indicador [valor_atributo]
+     * - si se encuentra un indicatorInstance:
+     *   + se modifica el valor del campo
+     *   + se marca como válido
+     *   + se actualizando la fecha de modificación a 'date'.
+     *  </p>
+     * @param processId
+     * @param mapeoColumnas
+     * @param datos
+     * @param date
+     * @param atributo
+     * @param columnaValorAtributo
+     * @param columnaAnoAcademico
+     * @return
+     */
+    public List<UpdateResult> updateIndicatorInstance(
             String processId,
             Map<String, String> mapeoColumnas,
             List<Map<String, Object>> datos,
@@ -58,11 +101,8 @@ public class DatabaseService {
 
         for (Map<String, Object> fila : datos) {
             //  1. Obtener el año académico para conectar a la base de datos
-          //  String rawYear = (String) fila.get("Año académico");
             String rawYear = (String) fila.get(columnaAnoAcademico);
-
-
-            String year = convertirAnoAcademico(rawYear);
+            String year = convertirAnoAcademicoParaBBDD(rawYear);
             JdbcTemplate jdbc = gestor.getJdbcTemplate(year);
 
             if (jdbc == null) {
@@ -71,7 +111,7 @@ public class DatabaseService {
                     results.add(new UpdateResult(
                             year, col, indicator, fila.get(col),
                             false, 0,
-                            "Sin conexión a BBDD para año " + year
+                            "Sin conexión a la base de datos para el año " + year
                     ));
                 }
                 continue;
@@ -99,6 +139,7 @@ public class DatabaseService {
 
                 String indicatorCoding = obtenerCodingIndicator(jdbc, indicatorName);
                 if (indicatorCoding == null || indicatorCoding.trim().isEmpty()) {
+
                     results.add(new UpdateResult(
                             year, fileColumn, indicatorName, value,
                             false, 0,
@@ -122,9 +163,7 @@ public class DatabaseService {
                         continue;
                     }
                     //  5. Construir el coding y hacer el UPDATE
-                    System.out.println("antes" + rawPossibleValue);
-                    if( "YY-ZZ".equals(obtenerCodingPorId(atributo))) rawPossibleValue = convertirAnoAcademicoValor(rawPossibleValue);
-                    System.out.println("despuees" + rawPossibleValue);
+                    if( "YY-ZZ".equals(getAttributeCodingByID(atributo))) rawPossibleValue = convertirAnoAcademicoValor(rawPossibleValue);
                     composite = processCoding + "-" + indicatorCoding + "[" + rawPossibleValue + "]";
                 }
                 try {
@@ -132,7 +171,7 @@ public class DatabaseService {
                     results.add(new UpdateResult(
                             year, fileColumn, indicatorName, value,
                             updated > 0, updated,
-                            updated > 0 ? null : "No se actualizó ninguna fila porque no se encontro un indicador con el siguiente codigo " +composite
+                            updated > 0 ? null : "No se ha encontrado el indicador asociado al proceso y/o atributo seleccionado "
                     ));
                 } catch (Exception ex) {
                     results.add(new UpdateResult(
@@ -146,6 +185,22 @@ public class DatabaseService {
         return results;
     }
 
+    /**
+     * Recupera el código de un atributo cuyo id es 'id'.
+     * @param id
+     * @return
+     */
+    private String getAttributeCodingByID(String id) {
+        String sql = "SELECT coding FROM attribute WHERE id = ?";
+        return defaultJdbcTemplate.queryForObject(sql, new Object[]{id}, String.class);
+    }
+
+    /**
+     * Recupera el código de un proceso cuyo id es 'id'.
+     * @param jdbcTemplate
+     * @param processId
+     * @return
+     */
     private String obtenerCodingProceso(JdbcTemplate jdbcTemplate, String processId) {
         String sql = "SELECT coding FROM process WHERE id = ?";
         try {
@@ -156,6 +211,12 @@ public class DatabaseService {
         }
     }
 
+    /**
+     *  Recupera el código de un indicador cuyo nombre es 'indicatorName'.
+     * @param jdbcTemplate
+     * @param indicatorName
+     * @return
+     */
     private String obtenerCodingIndicator(JdbcTemplate jdbcTemplate, String indicatorName) {
         String sql = "SELECT coding FROM indicator WHERE indicator_name = ?";
         try {
@@ -165,7 +226,13 @@ public class DatabaseService {
             return "";
         }
     }
-    private String convertirAnoAcademico(String valor) {
+
+    /**
+     * Convierte un año académico 'valor' del formato 'AAAA-AA' a 'AAAA-AAAA'.
+     * @param valor
+     * @return  String del año transformado
+     */
+    private String convertirAnoAcademicoParaBBDD(String valor) {
         if (valor == null || !valor.contains("-")) return valor;
 
         try {
@@ -179,6 +246,12 @@ public class DatabaseService {
             return valor;
         }
     }
+
+    /**
+     *Convierte un año académico 'valor' del formato 'AAAA-AAAA' a 'AAAA-AA'.
+     * @param valor
+     * @return String del año transformado
+     */
     private String convertirAnoAcademicoValor(String valor) {
         if (valor == null || !valor.contains("-")) return valor;
 
@@ -186,25 +259,12 @@ public class DatabaseService {
             String[] partes = valor.split("-");
             int inicio = Integer.parseInt(partes[0]);
             int fin = Integer.parseInt(partes[1]);
-            if (fin > 100) fin -= 2000; // ej. "21" → 2021
+            if (fin > 100) fin -= 2000; // ej. "2021" → 21
             return inicio + "-" + fin;
         } catch (Exception e) {
             System.err.println("Error al convertir el año académico: " + valor);
             return valor;
         }
     }
-    public List<Map<String, Object>> obtenerAtributos() {
-        String sql = "SELECT id, coding, description, position FROM attribute";
-        return defaultJdbcTemplate.queryForList(sql);
-    }
-    public String obtenerCodingPorId(String id) {
-        String sql = "SELECT coding FROM attribute WHERE id = ?";
-            return defaultJdbcTemplate.queryForObject(sql, new Object[]{id}, String.class);
-    }
 
-
-    public List<Map<String, Object>> obtenerPossibleValuesPorAtributo(int attributeId) {
-        String sql = "SELECT id, value FROM possible_value WHERE attribute_id = ?";
-        return defaultJdbcTemplate.queryForList(sql, attributeId);
-    }
 }

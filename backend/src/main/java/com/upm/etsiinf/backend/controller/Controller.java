@@ -35,7 +35,23 @@ public class Controller {
     }
 
     /**
-     * Método para guardar info de un archivo tanto CSV como XLS/ XLSX en cuyo caso se muestra la primera hoja.
+     * Maneja la subida de un archivo CSV o Excel (XLS/XLSX) para su previsualización y almacenamiento temporal.
+     * <p>
+     * Según el tipo de archivo, se aplica un procesamiento distinto:
+     * <ul>
+     *     <li><b>CSV:</b> Se parsea y guarda como una lista de filas con pares (atributo, valor).</li>
+     *     <li><b>Excel:</b> Se procesan todas las hojas. Solo se incluyen aquellas que contienen datos válidos.
+     *         Si no hay hojas válidas, se responde con un error 400.</li>
+     * </ul>
+     *
+     * @param file Archivo subido por el usuario. Debe ser de tipo CSV, XLS o XLSX.
+     * @return Respuesta HTTP con un mapa que puede contener:
+     * <ul>
+     *     <li><b>fileId:</b> ID generado para referenciar el archivo.</li>
+     *     <li><b>parsedData:</b> Datos previsualizados (solo de la primera hoja válida en Excel).</li>
+     *     <li><b>sheetNames:</b> Lista de hojas válidas (solo en archivos Excel).</li>
+     * </ul>
+     * En caso de error, se devuelve un mensaje apropiado con el código HTTP correspondiente.
      */
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> handleFileUpload(
@@ -50,19 +66,25 @@ public class Controller {
                 response.put("parsedData", parsedData);            // devuelve lista de (nombre atributo, valor)
             } else if (fileName != null && (fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
                 // Procesar todas las hojas del Excel
-                Map<String, List<Map<String, String>>> sheetsData = previsualizationService.previsualizeExcelAllSheets(file); // Guarda el nombre de la hoja y su previsualizacion
+                Map<String, List<Map<String, String>>> sheetsData = previsualizationService.previsualizeExcelAllSheets(file); // Guarda el nombre de la hoja y su previsualizacion (nombre, valor)
                 fileStorageService.saveExcelFile(fileId, sheetsData); // lo guardo para poder luego trbajar sobre el
-                // Se establece por defecto la primera hoja valida
                 // Filtro hojas válidas
                 Map<String, List<Map<String, String>>> validSheets = new LinkedHashMap<>();
                 for (Map.Entry<String, List<Map<String, String>>> entry : sheetsData.entrySet()) {
-                    if (FilePreviewService.isValid(entry.getValue())) {
+                    if (FilePreviewService.isValidSheet(entry.getValue())) {
                         validSheets.put(entry.getKey(), entry.getValue());
-                        System.out.println("Valid: " + entry.getKey());
+                        System.out.println("Hoja valida: " + entry.getKey());
                     }
                 }
                 if (validSheets.isEmpty()) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay hojas válidas para previsualizar.");
+                    System.out.println("Archivo sin hojas válidas");
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "No hay hojas válidas para previsualizar."
+                    );
+
+
+
                 }
 
                 // Usar la primera hoja válida como predeterminada
@@ -73,33 +95,32 @@ public class Controller {
                 throw new IllegalArgumentException("Formato de archivo no soportado. Solo se admiten CSV y Excel.");
             }
             response.put("fileId", fileId);
+            System.out.println("Archivo guardado con exito con ID: " + fileId);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
+        } catch (ResponseStatusException e) {
+            // Trato de errores esperados (como falta de hojas válidas)
+            return ResponseEntity
+                    .status(e.getStatusCode())
+                    .body(Map.of("error", true, "message", "No hay hojas válidas"));
+        }catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
     /**
-     * Método para  recuperar la previsualizacion de  otra hoja de un excel.
-     */
-    @GetMapping("/{fileId}/sheet")
-    public ResponseEntity<List<Map<String, String>>> getSheetData(@PathVariable("fileId") String fileId,
-                                                                  @RequestParam("nombreHoja") String sheetName) {
-        // Recupero la info de las hojas de ese fichero
-        Map<String, List<Map<String, String>>> sheetsData = fileStorageService.getExcelFile(fileId);  // Recuperas el fichero guardado
-        if (sheetsData == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        List<Map<String, String>> sheetData = sheetsData.get(sheetName);        // Recuperas info de la hoja pedida
-        if (sheetData == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(sheetData);
-    }
-
-    /**
-     * Método para devolver la info de un fichero previamente almacenado.
+     * Método recuperar los datos  de un fichero previamente almacenado.
+     * El archivo puede ser de tipo CSV o Excel (XLS/XLSX).
+     * <p>
+     * Si se trata de un archivo CSV, se devuelve directamente su contenido como una lista de mapas.
+     * Si es un archivo Excel, se devuelve el contenido de la primera hoja junto con los nombres de todas las hojas disponibles.
+     * @param fileId Identificador único del archivo que se desea recuperar.
+     * @return Respuesta HTTP con los datos del archivo:
+     *         <ul>
+     *             <li>Para CSV: lista de filas con sus valores.</li>
+     *             <li>Para Excel: un mapa con la hoja por defecto ("parsedData") y los nombres de todas las hojas ("sheetNames").</li>
+     *             <li>404 si no se encuentra ningún archivo con ese ID.</li>
+     *         </ul>
      */
     @GetMapping("/{fileId}")
     public ResponseEntity<?> getFileData(@PathVariable("fileId") String fileId) {
@@ -122,14 +143,47 @@ public class Controller {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
+    /**
+     * Recupera los datos de un archivo previamente subido para su previsualización.
+     *
+     * @param fileId Identificador único del archivo del que se desea obtener una vista previa.
+     * @param sheetName Nombre de la hoja (en archivos Excel) que se desea previsualizar. Puede ser nulo si el archivo no es un Excel.
+     * @return Respuesta HTTP que contiene la tabla de datos de la hoja especificada, lista para ser mostrada en la interfaz.
+     */
+
+    @GetMapping("/{fileId}/sheet")
+    public ResponseEntity<List<Map<String, String>>> getSheetData(@PathVariable("fileId") String fileId,
+                                                                  @RequestParam("nombreHoja") String sheetName) {
+        // Recupero la info de las hojas de ese fichero
+        Map<String, List<Map<String, String>>> sheetsData = fileStorageService.getExcelFile(fileId);  // Recuperas la info del fichero guardado
+        if (sheetsData == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        List<Map<String, String>> sheetData = sheetsData.get(sheetName);        // Recuperas info de la hoja pedida
+        if (sheetData == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        System.out.println("Se cambió a la hoja " + sheetName);
+        return ResponseEntity.ok(sheetData);
+    }
+
+
+
 
     /**
-     * Devuelve la lista de procesos existentes en la bbdd
+     * Devuelve la lista de procesos existentes en la bbdd.
+     <p>
+     * Este método consulta la base de datos correspondiente al año por defecto y devuelve
+     * una lista de procesos.
+     *
+     * @return Respuesta HTTP con una lista de mapas que representan los procesos obtenidos.
+     *         Si ocurre un error durante la consulta, se devuelve un error 500 (Internal Server Error).
      */
     @GetMapping("/processes") /*pasarle el atributo del año en el que estas */
     public ResponseEntity<List<Map<String, Object>>> getProcesos() {
         try {
-            List<Map<String, Object>> procesos = databaseService.obtenerProcesos();
+            List<Map<String, Object>> procesos = databaseService.getProcesses();
+            System.out.println("Se obtienen los procesos: "+ procesos);
             return ResponseEntity.ok(procesos);
         } catch (Exception e) {
             e.printStackTrace();
@@ -138,31 +192,21 @@ public class Controller {
     }
 
     /**
-     * Devuelve la lista de indicadores de un proceso especifico existentes en la bbdd
+     * Devuelve la lista de indicadores de un proceso especifico existentes en la bbdd por defecto
+     <p>
+     * Este método consulta la base de datos correspondiente al año por defecto y devuelve
+     * una lista de indicadores, asociados a un proceso.
+     * @param processId Proceso del cual se quieren saber sus indicadores asociados.
+     * @return Respuesta HTTP con una lista de mapas que representan los indicadores obtenidos.
+     *   Si ocurre un error durante la consulta, se devuelve un error 500 (Internal Server Error).
      */
     @GetMapping("/processes/{processId}/indicators")
     public ResponseEntity<List<Map<String, Object>>> getIndicadoresByProcess(@PathVariable("processId") int processId) {
-        List<Map<String, Object>> indicadores = databaseService.obtenerIndicadoresPorProceso(processId);
-        return ResponseEntity.ok(indicadores);
-    }
-
-
-    /**
-     * Devuelve la lista de atributos de un proceso especifico existentes en la bbdd
-     */
-    @GetMapping("/attributes")
-    public ResponseEntity<List<Map<String, Object>>> getAtributos() {
-        List<Map<String, Object>> atributos= databaseService.obtenerAtributos();
-        return ResponseEntity.ok(atributos);
-    }
-
-    @GetMapping("/attributes/{attributeId}/valores")
-    public ResponseEntity<List<Map<String, Object>>> getAtributoValues(@PathVariable("attributeId") int attributeId) {
         try {
-            String sql = "SELECT id, value FROM possible_value WHERE attribute_id = ?";
-            List<Map<String, Object>> possibleValues = databaseService.obtenerPossibleValuesPorAtributo(attributeId);
-            return ResponseEntity.ok(possibleValues);
-        } catch (Exception e) {
+            List<Map<String, Object>> indicadores = databaseService.getIndicatorsbyProcess(processId);
+            System.out.println("Se obtienen los indicadores: " + indicadores + " asociados al proceso: " + processId);
+            return ResponseEntity.ok(indicadores);
+        }catch(Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
@@ -170,9 +214,44 @@ public class Controller {
 
 
     /**
-     * Metodo que sube las columnas seleccionadas al indicador correspondiente en la bbdd.
+     * Devuelve la lista de atributos existentes en la bbdd por defecto.
+     <p>
+     * Este método consulta la base de datos correspondiente al año por defecto y devuelve
+     * una lista de atributos.
+     * @return Respuesta HTTP con una lista de mapas que representan los atributos obtenidos.
+     *   Si ocurre un error durante la consulta, se devuelve un error 500 (Internal Server Error).
      */
+    @GetMapping("/attributes")
+    public ResponseEntity<List<Map<String, Object>>> getAtributos() {
+        try {
+            List<Map<String, Object>> atributos = databaseService.getAttributes();
+            return ResponseEntity.ok(atributos);
+        }catch(Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
+    /**
+     * Procesa un archivo previamente subido (CSV o Excel), aplica un mapeo de columnas
+     * y actualiza los valores del indicador correspondiente en la base de datos.
+     * <p>
+     * El archivo se identifica mediante su ID (`fileId`) y puede contener una o varias hojas (en caso de Excel).
+     * Se espera un mapeo en formato JSON que relacione las columnas del archivo con los indicadores del sistema.
+     * La información se filtra por año académico antes de ser cargada en el indicator_instance de la base de datos.
+     *
+     * @param fileId ID del archivo previamente subido al sistema.
+     * @param nombreHoja Nombre de la hoja a procesar (solo se aplica si el archivo es Excel).
+     * @param mapeoColumnasJson Mapeo de columnas en formato JSON, donde cada clave representa una columna del archivo y su valor el indicador del sistema.
+     * @param processId ID del proceso relacionado con los indicadores que se quieren actualizar.
+     * @param date Fecha de referencia para registrar la carga en la base de datos.
+     * @param attribute Atributo vinculados a los indicadores que se quieren actualizar.
+     * @param possibleValue Valor posible del atributo.
+     * @param academicYearColumn Nombre de la columna del archivo que contiene los años académicos, usada para conectarse a la base de datos que corresponda.
+     * @return Una respuesta HTTP con la lista de resultados de la operación.
+     *         Cada resultado (`UpdateResult`) indica si la actualización fue exitosa, cuántas filas fueron afectadas y posibles mensajes de error.
+     *         En caso de error global, se devuelve un único `UpdateResult` con el mensaje correspondiente.
+     */
     @PostMapping("/updateInd")
     public ResponseEntity<List<UpdateResult>> procesarArchivo(
             @RequestParam("fileId") String fileId,
@@ -197,12 +276,9 @@ public class Controller {
             System.out.println(" - PosibleValor: " + possibleValue);
             System.out.println(" - Columna año académico: " + academicYearColumn);
 
-
             // Convertir el JSON recibido a un Map.
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> mapeoColumnas = objectMapper.readValue(
-                    mapeoColumnasJson, new TypeReference<Map<String, String>>() {});
-
+            Map<String, String> mapeoColumnas = objectMapper.readValue(mapeoColumnasJson, new TypeReference<Map<String, String>>() {});
             List<Map<String, Object>> resultado = null;
 
             // Intentar recuperar datos preprocesados (CSV).
@@ -213,7 +289,7 @@ public class Controller {
                 // Si no es CSV, probar con Excel.
                 Map<String, List<Map<String, String>>> excelData = fileStorageService.getExcelFile(fileId);
                 if (excelData != null) {
-                    // Si no se especificó la hoja, usar la primera.
+                    // Si no se especificó la hoja, usar la primera posible.
                     if (nombreHoja == null || nombreHoja.trim().isEmpty()) {
                         nombreHoja = excelData.keySet().iterator().next();
                     }
@@ -225,15 +301,11 @@ public class Controller {
             if (resultado == null) {
                 throw new IllegalArgumentException("No se pudieron recuperar datos para el fileId: " + fileId);
             }
-            System.out.println(attribute);
-
-// Actualizar indicator_instance usando el mapeo y los datos filtrados.
-           List<UpdateResult> res= databaseService.actualizarIndicatorInstance(processId, mapeoColumnas, resultado, date, attribute, possibleValue, academicYearColumn);
+            // Actualizar indicator_instance usando el mapeo y los datos filtrados.
+           List<UpdateResult> res= databaseService.updateIndicatorInstance(processId, mapeoColumnas, resultado, date, attribute, possibleValue, academicYearColumn);
+            System.out.println("Datos subidos con éxito ");
             return ResponseEntity.ok(res);
-           // return ResponseEntity.ok("Archivo procesado y actualizado en indicator_instance.");
         } catch (Exception e) {
-           /* e.printStackTrace();
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());*/
             e.printStackTrace();
             // Construimos un UpdateResult de error genérico
           UpdateResult errorResult = new UpdateResult(
@@ -246,9 +318,7 @@ public class Controller {
                     /* errorMessage*/ e.getMessage()
             );
             // Devolvemos una lista con un único elemento de error
-            return ResponseEntity
-                    .badRequest()
-                    .body(Collections.singletonList(errorResult));
+            return ResponseEntity.badRequest().body(Collections.singletonList(errorResult));
         }
     }
 

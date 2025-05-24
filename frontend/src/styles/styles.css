@@ -1,7 +1,9 @@
-/* selectFile.css */
+
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
 
-/*index.css */
+/*----------------------------------------------------------------------------------------------------------------------
+----------------------------------------index.css------------------------------------------------------------------------
+ -----------------------------------------------------------------------------------------------------------------------*/
 html, body {
     height: 100%;
     margin: 0;
@@ -9,7 +11,9 @@ html, body {
     background-color: rgba(227, 234, 234, 0.91);
   }
 
-/*app*/
+/* ---------------------------------------------------------------------------------------------------------------------
+-----------------------------------------app----------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------*/
 .app-container {
 padding-top: 20px;
 min-height: 100vh; 
@@ -24,7 +28,9 @@ margin: auto;
     box-sizing: border-box;  /* Importante para que el padding se incluya en el ancho */
 }
 
-/*Fileuploader*/
+/*----------------------------------------------------------------------------------------------------------------------
+-----------------------------------------Fileuploader------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------*/
 *{
     font-family: 'Ubuntu', sans-serif;
 
@@ -59,7 +65,6 @@ margin: auto;
 }
 
 .drop-section {
-
     min-height: 310px;
     box-shadow: rgba(142, 158, 193, 0.91) 0px 0px 2px 0px, rgba(142, 158, 193, 0.91) 0px 1px 2px 0px;
     background-color: rgba(228, 233, 241, 0.91);
@@ -112,14 +117,12 @@ margin: auto;
 .drag-over-effect div.col:first-child{
     opacity: 0;
     visibility: hidden;
-   /* pointer-events: none;*/
     transform: scale(0.5);
 }
 .drag-over-effect div.col:last-child {
     opacity: 1;
     visibility: visible;
     transform: translate(-50%, -50%) scale(0.8); /* Reducir al tamaño normal */
-  /*  pointer-events: auto;*/
 }
 .drop-section .upload-icon{
     margin-top: 25px;
@@ -145,23 +148,23 @@ margin: auto;
 }
 /* Cambio de color al pasar el cursor */
 .drop-section button:hover {
-    background-color: #4059AD; /* Un azul más oscuro */
+    background-color: #4059AD;
     transform: scale(1.05); /* Efecto de agrandamiento leve */
 }
 .drop-section input{
     display: none;
 }
 .list li .col img {
-    width: 40px;  /* Ajusta el tamaño según necesites */
-    height: auto; /* Mantiene la proporción */
-    max-height: 40px; /* Evita que se haga demasiado grande */
+    width: 40px;
+    height: auto;
+    max-height: 40px;
     margin-top: 12px; 
 }
 .list-section {
     width: 100%;
-    max-width: 950px;  /* El mismo valor que deseas para el max-width */
-    display: block;    /* Asegúrate de que sea visible */
-    padding: 0 5px 5px; /* Espacio horizontal para evitar desbordes */
+    max-width: 950px;
+    display: block;
+    padding: 0 5px 5px;
     text-align: left;
     box-sizing: border-box;
 }
@@ -270,8 +273,8 @@ margin: auto;
 }
 
 .list-section li  .error-message {
-    font-size: 12px; /* Cambia el número según lo grande o pequeño que quieras */
-    color: red; /* (opcional) puedes asegurarte de que sea rojo */
+    font-size: 12px;
+    color: red;
 }
 
 /* Contenedor del botón para centrarlo */
@@ -282,7 +285,7 @@ margin: auto;
     align-items: center; /* Centra los elementos horizontalmente */
     justify-content: center; /* Centra los elementos verticalmente */
     height: 8vh; /* Asegura que el contenedor ocupe toda la altura de la ventana */
-    width: 100%; /* Ocupa todo el ancho */
+    width: 100%;
 }
 
 /* Estilo para el botón de navegación */
@@ -314,12 +317,9 @@ margin: auto;
     cursor: not-allowed; /* Cursor de no permitido */
 }
 
-  
-
-
-
-
-/* FilePrevisualizationComponent.css */
+/*------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------- FileMapping.css-----------------------------------------------------------
+ ------------------------------------------------------------------------------------------------------------------------------*/
 .table-view-container {
     width: 100%;
     display: flex;
@@ -376,17 +376,13 @@ margin: auto;
 
 }
 
-
-
-
-
 .button-container {
     margin-top: 5px;
     text-align: right;
 }
 
 .show-more-button{
-    padding: 0.3rem 0.3rem;
+    padding: 0.6rem 1rem;
     border-radius: 0.375rem;
     transition: background-color 0.2s ease;
     cursor: pointer;
@@ -399,7 +395,7 @@ margin: auto;
 
 .show-less-button {
     margin-left: 5px;
-    padding: 0.3rem 0.3rem;
+    padding: 0.6rem 1rem;
     border-radius: 0.375rem;
     transition: background-color 0.2s ease;
     cursor: pointer;
@@ -419,9 +415,6 @@ margin: auto;
     font-size: 1rem;
 }
 
-
-
-
 .go-back-container {
     margin-top: 2rem;
     text-align: center;
@@ -440,6 +433,7 @@ margin: auto;
 }
 .goBack-button:hover {
     background-color: #4059AD;
+    color: white;
     transform: scale(1.05);
 }
 .subir-button{
@@ -475,11 +469,16 @@ margin: auto;
 }
 
 .process-selector label,
-.sheet-selector label, .date-selector label, .academic-year-selector label{
+.sheet-selector label, .date-selector label, .academic-year-selector label, .column-instructions label{
     font-weight: bold;
     margin-right: 10px;
     font-size: 1.1rem;
     color: #333;
+}
+.column-instructions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Alinea todo a la izquierda */
 }
 
 .process-selector select,
@@ -503,7 +502,7 @@ margin: auto;
 .attribute-selector {
     margin-bottom: 20px;
     display: flex;
-    flex-wrap: wrap; /* ¡Aquí está la clave para que no se salga! */
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
 }
@@ -551,18 +550,6 @@ margin: auto;
     gap: 12px;
 }
 
-/*.selected-column-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    border-radius: 999px;
-    background-color: #eee;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    gap: 40px;
-    flex-wrap: nowrap;
-    min-width: 0;
-}*/
 .selected-column-item {
     display: flex;
     align-items: center;
@@ -575,7 +562,6 @@ margin: auto;
     margin-bottom: 8px;
     gap: 12px;
 }
-
 
 .indicador-dropdown {
     width: 200px;
@@ -600,7 +586,6 @@ margin: auto;
 
 }
 
-
 .remove-tag {
     font-weight: bold;
     color: #1d1d1d;
@@ -617,13 +602,14 @@ margin: auto;
     text-align: left;
 }
 
-.column-instructions, .info-process {
+ .info-process {
     text-align: center;
     margin-top: 15px;
-    font-size: 0.9rem;
-    color: #555;
+    font-size: 1rem;
+    color: rgba(126, 137, 168, 0.91);
+
 }
-    /*Resultados*//* Centrar el contenedor de feedback */
+/*-----------------Resultados-----------------*/
 /* Contenedor general */
 .upload-feedback {
     margin-top: 1.5rem;
@@ -659,10 +645,9 @@ margin: auto;
 }
 
 /* Fila exitosa */
-/*.results-table .row-success {
-    background-color: #e6ffe6;
-    background-color: rgba(228, 233, 241, 0.91);
-}*/
+.results-table .row-success {
+  background-color: #f6fbf6;
+}
 
 /* Fila con error */
 .results-table .row-fail {
@@ -671,12 +656,14 @@ margin: auto;
 
 
 /* Títulos */
-.upload-feedback h3 {
+.upload-feedback.section-title-with-tooltip h3 {
     margin-bottom: 0.75rem;
     font-size: 1.2rem;
     color: #333;
     text-align: left;
 }
+
+
 .date-input.input-error,.indicador-dropdown.input-error,
 .value-select.input-error, .academic-year-select.input-error {
     border: 2px solid red ;
@@ -697,6 +684,92 @@ margin: auto;
 }
 
 
+.select-with-tooltip, .date-selector , .academic-year-selector{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    width: fit-content;
+}
+.possible-value-group{
+
+    gap: 8px;
+
+}
+.section-title-with-tooltip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.tooltip-icon {
+    background-color: #36478f;
+    color: white;
+    border-radius: 50%;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.tooltip-text {
+    visibility: hidden;
+    width: max-content;
+    max-width: 400px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+    padding: 6px;
+    border-radius: 4px;
+    position: absolute;
+    z-index: 10;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: normal;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip-container:hover .tooltip-text,
+.tooltip-container:focus-within .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+.tooltip-text strong {
+    font-weight: bold;
+}
+
+
+.success-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #f6fbf6;
+    border: 1px solid #b0edcf;
+    color: #1d1d1e;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.success-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/*-----------------------------------------------------------------------------------------------------------------------
+------------------------------------Para cuando se minimiza la pantalla-------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------ */
 @media (max-width: 480px) {
     .drop-section {
         padding: 15px;
@@ -746,6 +819,4 @@ margin: auto;
     .possible-value-group {
         margin-top: 15px; /* Solo para el segundo */
     }
-
-
 }

@@ -1,70 +1,90 @@
-const BASE_URL = "http://localhost:8080/file";
+const BASE_URL = "http://localhost:8080/file"; //conexión con el backend.
 
+/**
+ * Envía al backend el archivo proporcionado para su procesamiento o almacenamiento.
+ * @param {File} file - Archivo que se desea subir al backend.
+ * @returns {Promise<any>} Promesa que se resuelve con la respuesta del backend tras subir el archivo.
+ */
 
-export function uploadRawFile(file) {
+export async function uploadRawFile(file) {
+    // Creamos un formadata para enviar el archivo como multipart
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file); // Añadimos el archvio al formulario con la clave fila
 
-    return new Promise((resolve, reject) => {
-        const request = new XMLHttpRequest();
-        request.open("POST", `${BASE_URL}/upload`, true);
+    try {
+        // Enviamos la petición POST usando fetch al endpoint correspondiente
+        const res = await fetch(`${BASE_URL}/upload`, {
+            method: "POST",
+            body: formData,
+        });
 
-        request.onload = () => {
-            if (request.status === 200) {
-                try {
-                    const response = JSON.parse(request.responseText);
-                    resolve(response);
-                } catch {
-                    reject({ status: "error", message: "Respuesta inválida del servidor" });
-                }
-            } else {
-                reject({ status: "error", message: `HTTP ${request.status}` });
-            }
+        // Respuesta exitosa
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        return await res.json();
+    } catch (error) {
+        // caso error
+        throw {
+            status: "error",
+            message: error.message || "Error de red o respuesta inválida del servidor",
         };
-
-        request.onerror = () => reject({ status: "error", message: "Error de red" });
-
-        request.send(formData);
-    });
+    }
 }
+/**
+ * Realiza una petición al backend para obtener la lista de procesos disponibles.
+ * @returns {Promise<any>} Promesa que se resuelve con la lista de procesos disponibles.
+ */
 
-
-// Fetch processes
 export async function getProcesses() {
     const res = await fetch(`${BASE_URL}/processes`);
     if (!res.ok) throw new Error("Error al cargar procesos");
     return res.json();
 }
 
-// Fetch file data by ID
+/**
+ * Realiza una petición al backend para obtener los datos asociados a un archivo previamente cargado.
+ * @param {string} fileId - ID del archivo del cual se desean obtener los datos.
+ * @returns {Promise<any>} Promesa que se resuelve con los datos del archivo.
+ */
+
 export async function getFileData(fileId) {
     const res = await fetch(`${BASE_URL}/${fileId}`);
     if (!res.ok) throw new Error(`Error al cargar el archivo con ID ${fileId}`);
     return res.json();
 }
 
-// Fetch indicators for a process
+/**
+ * Realiza una petición al backend para obtener la lista de indicadores asociados a un proceso específico.
+ * @param {string} processId - ID del proceso del cual se desean obtener los indicadores.
+ * @returns {Promise<any>} Promesa que se resuelve con la lista de indicadores del proceso.
+ */
+
 export async function getIndicators(processId) {
     const res = await fetch(`${BASE_URL}/processes/${processId}/indicators`);
     if (!res.ok) throw new Error(`Error al cargar los indicadores del proceso con ID ${processId}`);
     return res.json();
 }
 
-// Fetch all attributes
+/**
+ * Realiza una petición al backend para obtener la lista de atributos disponibles para el mapeo de datos.
+ * @returns {Promise<string[]>} Promesa que se resuelve con un array de nombres de atributos disponibles.
+ */
+
 export async function getAttributes() {
     const res = await fetch(`${BASE_URL}/attributes`);
     if (!res.ok) throw new Error("Error al cargar los archivos");
     return res.json();
 }
 
-// Fetch values for an attribute
-export async function getPossibleValues(attributeId) {
-    const res = await fetch(`${BASE_URL}/attributes/${attributeId}/valores`);
-    if (!res.ok) throw new Error(`Error al cargar los posibles valores para el atributo con ID ${attributeId}`);
-    return res.json();
-}
+/**
+ * Obtiene los datos de una hoja específica de un archivo previamente cargado.
+ * @param {string} fileId - ID del archivo del que se desea obtener la hoja.
+ * @param {string} sheetName - Nombre de la hoja dentro del archivo (aplicable a archivos Excel).
+ * @returns {Promise<any>} Promesa que se resuelve con los datos de la hoja solicitada.
+ */
 
-// Fetch sheet data
 export async function getSheetData(fileId, sheetName) {
     const url = new URL(`${BASE_URL}/${fileId}/sheet`);
     url.searchParams.append("nombreHoja", sheetName);
@@ -73,8 +93,20 @@ export async function getSheetData(fileId, sheetName) {
     return res.json();
 }
 
-// Upload mapping
-export async function uploadMapping({ fileId, sheetName, mapping, process, date, attribute, possibleValue , academicYearColumn}) {
+/**
+ * Envía al backend los datos necesarios para actualizar los indicadores con la información procesada del archivo.
+ * @param {string} fileId - ID del archivo cargado previamente.
+ * @param {string} sheetName - Nombre de la hoja del archivo (en caso de archivos Excel con múltiples hojas).
+ * @param {Object} mapping - Objeto que contiene la relación entre indicadores y columnas del archivo.
+ * @param {string} process - Tipo de proceso al que pertenecen los indicadores a actualizar.
+ * @param {string} date - Fecha de actualización o ejecución del proceso.
+ * @param {string} attribute - Nombre del atributo .
+ * @param {string} possibleValue - Valor específico del atributo para filtrar o actualizar.
+ * @param {string} academicYearColumn - Nombre de la columna que contiene los años académicos.
+ * @returns {Promise<any>} Promesa que se resuelve con la respuesta del backend tras actualizar los indicadores.
+ */
+
+export async function uploadMapping({ fileId, sheetName, mapping, process, date, attribute, possibleValue , academicYearColumn}) { // Recibe un unico objeto con todos esos parametro
     const form = new FormData();
     form.append("fileId", fileId);
     form.append("nombreHoja", sheetName);

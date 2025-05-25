@@ -1,7 +1,8 @@
 # 📊 Survey Uploader – TFG eQUALINF
 
-El sistema Survey Uploader, desarrollado como parte de un Trabajo de Fin de Grado en la plataforma de calidad eQUALINF, permite la carga y análisis semiautomático de encuestas académicas. 
+El sistema Survey Uploader, desarrollado como parte de un Trabajo de Fin de Grado en la plataforma de calidad eQUALINF, permite la carga y análisis semiautomático de encuestas académicas.  
 Consta de un backend en Spring Boot y un frontend en React, ambos orquestados mediante Docker para facilitar el despliegue e integración en otros entornos.
+
 ---
 ## 📁 Estructura del proyecto
 ```
@@ -30,7 +31,7 @@ Survey_Uploader_eQUALINF/
 │   │   └── index.js, App.js, etc.    
 ├── database_scripts
 ```
----
+
 ## 🚀 ¿Cómo ejecutar el proyecto?
 
 ### ✅ Requisitos
@@ -85,18 +86,19 @@ estos parámetros no serían necesarios.
 
 
 
+## 🛠️ Personalización y mantenimiento
 
-🛠️ Personalización y mantenimiento
--	Los servicios están desacoplados, por lo que se pueden adaptar fácilmente.
--	Se puede modificar la configuración de bases de datos: editar `db-config.properties` para cambiar URLs, credenciales o bien añadir nuevas bases de datos.
--	Cambiar puertos: modificar el archivo `docker-compose.yml` para ajustar los puertos expuestos externamente.
--	Personalizar interfaz: editar `frontend/src/styles/styles.css` para cambiar colores, fuentes y aspecto visual de la interfaz.
--	Añadir funcionalidades: crear nuevos controladores, servicios o rutas en el backend siguiendo el patrón MVC de Spring Boot.
--	Actualizar dependencias: usar `mvn versions:display-dependency-updates` en el backend o `npm update` en el frontend.
+- Los servicios están desacoplados, por lo que se pueden adaptar fácilmente.
+- Se puede modificar la configuración de bases de datos: editar `db-config.properties` para cambiar URLs, credenciales o bien añadir nuevas bases de datos.
+- Cambiar puertos: modificar el archivo `docker-compose.yml` para ajustar los puertos expuestos externamente.
+- Personalizar interfaz: editar `frontend/src/styles/styles.css` para cambiar colores, fuentes y aspecto visual de la interfaz.
+- Añadir funcionalidades: crear nuevos controladores, servicios o rutas en el backend siguiendo el patrón MVC de Spring Boot.
+- Actualizar dependencias: usar `mvn versions:display-dependency-updates` en el backend o `npm update` en el frontend.
 
 
+## 📌 Licencia y autoría  
 
-📌 Licencia y autoría
-Este proyecto ha sido desarrollado como parte del Trabajo Fin de Grado en la Escuela Técnica Superior de Ingenieros Informáticos de la Universidad Politécnica de Madrid
+Este proyecto ha sido desarrollado como parte del Trabajo Fin de Grado en la Escuela Técnica Superior de Ingenieros Informáticos de la Universidad Politécnica de Madrid.
+
 ---
 Isabella Chaves Gómez

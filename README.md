@@ -57,7 +57,7 @@ Survey_Uploader_eQUALINF/
   -git clone https://github.com/isabellachgo/Survey_Uploader_eQUALINF.git
 3. Acceder a la carpeta del proyecto:     cd Survey_Uploader_eQUALINF
 4. Ejecutar con Docker compose:  
-    - 🐳 docker-compose up –build
+    - 🐳 docker-compose up -–build
 5. Acceder a los servicios:
     - 🌐 Backend en http://localhost:8080
     - 🖥️ Frontend en http://localhost:3000

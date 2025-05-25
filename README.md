@@ -47,26 +47,28 @@ Survey_Uploader_eQUALINF/
   - `pac_db_2023_2024`
   - `pac_db_2024_2025` (usada como principal)
   - Nota: los scrips de dichas bases de datos, que son las utilizadas en las pruebas, 
-    se proporcionan como ejemplo en la carpeta  📁 /database_scripts.
+    se proporcionan como ejemplo en la carpeta:
+    
+    `📁 /database_scripts`.
   - Verifica que el usuario (root/1234) tiene permisos suficientes. 
   - Si estás en Windows, permite a Docker el acceso a redes locales (firewall).
 
 ### 📋 Pasos para la ejecución
 1. Abrir Docker Desktop y esperar a que diga “Docker Desktop is running”.
 2. Clonar el proyecto
-  -git clone https://github.com/isabellachgo/Survey_Uploader_eQUALINF.git
-3. Acceder a la carpeta del proyecto:     cd Survey_Uploader_eQUALINF
+   `git clone https://github.com/isabellachgo/Survey_Uploader_eQUALINF.git`
+3. Acceder a la carpeta del proyecto:     `cd Survey_Uploader_eQUALINF`
 4. Ejecutar con Docker compose:  
-    - 🐳 docker-compose up -–build
+    - 🐳 `docker-compose up -–build`
 5. Acceder a los servicios:
-    - 🌐 Backend en http://localhost:8080
-    - 🖥️ Frontend en http://localhost:3000
+    - 🌐 Backend en `http://localhost:8080`
+    - 🖥️ Frontend en `http://localhost:3000`
 
 ## ⚙️ Configuración de base de datos (db-config.properties)
 
 El backend accede a distintas bases de datos según el curso académico. Esto se configura en el archivo:
 
-📁 backend/src/main/resources/db-config.properties
+`📁 backend/src/main/resources/db-config.properties`
 
 Ejemplo:
 ```properties

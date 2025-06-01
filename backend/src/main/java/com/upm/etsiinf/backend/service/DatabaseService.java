@@ -74,24 +74,24 @@ public class DatabaseService {
      *   + se actualizando la fecha de modificación a 'date'.
      *  </p>
      * @param processId
-     * @param mapeoColumnas
-     * @param datos
+     * @param columnMapping
+     * @param data
      * @param date
-     * @param atributo
-     * @param columnaValorAtributo
-     * @param columnaAnoAcademico
-     * @return
+     * @param attribute
+     * @param AttributeValueColumn
+     * @param academicYearColumn
+     * @return Lista de resultados de la actialización. tipo UpdateResult
      */
     public List<UpdateResult> updateIndicatorInstance(
             String processId,
-            Map<String, String> mapeoColumnas,
-            List<Map<String, Object>> datos,
+            Map<String, String> columnMapping,
+            List<Map<String, Object>> data,
             Date date,
-            String atributo,
-            String columnaValorAtributo,  String columnaAnoAcademico) {
+            String attribute,
+            String AttributeValueColumn,  String academicYearColumn) {
 
         List<UpdateResult> results = new ArrayList<>();
-        if (datos == null || datos.isEmpty()) {
+        if (data == null || data.isEmpty()) {
             return results;
         }
 
@@ -99,15 +99,15 @@ public class DatabaseService {
                 + "SET field = ?, valid = true, modified_date = ? "
                 + "WHERE indicator_name = ? AND coding = ?";
 
-        for (Map<String, Object> fila : datos) {
+        for (Map<String, Object> fila : data) {
             //  1. Obtener el año académico para conectar a la base de datos
-            String rawYear = (String) fila.get(columnaAnoAcademico);
-            String year = convertirAnoAcademicoParaBBDD(rawYear);
+            String rawYear = (String) fila.get(academicYearColumn);
+            String year = transformDBYear(rawYear);
             JdbcTemplate jdbc = gestor.getJdbcTemplate(year);
 
             if (jdbc == null) {
-                for (String col : mapeoColumnas.keySet()) {
-                    String indicator = mapeoColumnas.get(col);
+                for (String col : columnMapping.keySet()) {
+                    String indicator = columnMapping.get(col);
                     results.add(new UpdateResult(
                             year, col, indicator, fila.get(col),
                             false, 0,
@@ -120,8 +120,8 @@ public class DatabaseService {
             //  2. Obtener el coding del proceso
             String processCoding = obtenerCodingProceso(jdbc, processId);
             if (processCoding == null || processCoding.trim().isEmpty()) {
-                for (String col : mapeoColumnas.keySet()) {
-                    String indicator = mapeoColumnas.get(col);
+                for (String col : columnMapping.keySet()) {
+                    String indicator = columnMapping.get(col);
                     results.add(new UpdateResult(
                             year, col, indicator, fila.get(col),
                             false, 0,
@@ -132,7 +132,7 @@ public class DatabaseService {
             }
 
             //  3. Procesar columnas mapeadas
-            for (Map.Entry<String, String> entry : mapeoColumnas.entrySet()) {
+            for (Map.Entry<String, String> entry : columnMapping.entrySet()) {
                 String fileColumn = entry.getKey();
                 String indicatorName = entry.getValue();
                 Object value = fila.get(fileColumn);
@@ -148,22 +148,22 @@ public class DatabaseService {
                     continue;
                 }
                 String composite=null;
-                if(atributo==null ||columnaValorAtributo == null || columnaValorAtributo.trim().isEmpty()) {
+                if(attribute==null ||AttributeValueColumn == null || AttributeValueColumn.trim().isEmpty()) {
                    composite = processCoding + "-" + indicatorCoding;
                 }
                 else {
                     //  4. Obtener el valor del atributo desde la columna seleccionada
-                    String rawPossibleValue = (String) fila.get(columnaValorAtributo);
+                    String rawPossibleValue = (String) fila.get(AttributeValueColumn);
                     if (rawPossibleValue == null || rawPossibleValue.trim().isEmpty()) {
                         results.add(new UpdateResult(
                                 year, fileColumn, indicatorName, value,
                                 false, 0,
-                                "Valor del atributo vacío en columna: " + columnaValorAtributo
+                                "Valor del atributo vacío en columna: " + AttributeValueColumn
                         ));
                         continue;
                     }
                     //  5. Construir el coding y hacer el UPDATE
-                    if( "YY-ZZ".equals(getAttributeCodingByID(atributo))) rawPossibleValue = convertirAnoAcademicoValor(rawPossibleValue);
+                    if( "YY-ZZ".equals(getAttributeCodingByID(attribute))) rawPossibleValue = transformValueYear(rawPossibleValue);
                     composite = processCoding + "-" + indicatorCoding + "[" + rawPossibleValue + "]";
                 }
                 try {
@@ -188,7 +188,7 @@ public class DatabaseService {
     /**
      * Recupera el código de un atributo cuyo id es 'id'.
      * @param id
-     * @return
+     * @return código del atributo
      */
     private String getAttributeCodingByID(String id) {
         String sql = "SELECT coding FROM attribute WHERE id = ?";
@@ -199,7 +199,7 @@ public class DatabaseService {
      * Recupera el código de un proceso cuyo id es 'id'.
      * @param jdbcTemplate
      * @param processId
-     * @return
+     * @return código del proceso
      */
     private String obtenerCodingProceso(JdbcTemplate jdbcTemplate, String processId) {
         String sql = "SELECT coding FROM process WHERE id = ?";
@@ -215,7 +215,7 @@ public class DatabaseService {
      *  Recupera el código de un indicador cuyo nombre es 'indicatorName'.
      * @param jdbcTemplate
      * @param indicatorName
-     * @return
+     * @return código del indicador
      */
     private String obtenerCodingIndicator(JdbcTemplate jdbcTemplate, String indicatorName) {
         String sql = "SELECT coding FROM indicator WHERE indicator_name = ?";
@@ -232,7 +232,7 @@ public class DatabaseService {
      * @param valor
      * @return  String del año transformado
      */
-    private String convertirAnoAcademicoParaBBDD(String valor) {
+    private String transformDBYear(String valor) {
         if (valor == null || !valor.contains("-")) return valor;
 
         try {
@@ -252,7 +252,7 @@ public class DatabaseService {
      * @param valor
      * @return String del año transformado
      */
-    private String convertirAnoAcademicoValor(String valor) {
+    private String transformValueYear(String valor) {
         if (valor == null || !valor.contains("-")) return valor;
 
         try {

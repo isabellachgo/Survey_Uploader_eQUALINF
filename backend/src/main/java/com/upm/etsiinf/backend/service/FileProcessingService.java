@@ -11,20 +11,20 @@ public class FileProcessingService {
 
     /**
      * Método auxiliar que filtra la lista de filas preprocesadas,
-     * conservando únicamente las columnas indicadas en el mapeo y la que contiene los años académicos (necesaria para la conexión a la base de datos).
-     * @param datos
-     * @param mapeoColumnas
-     * @param columnaAnoAcademico
+     * conservando únicamente las columnas indicadas en el mapeo y la que contiene los años académicos (necesaria para la conexión a la base de data).
+     * @param data
+     * @param columnMapping
+     * @param academicYearColumn
      * @return lista de mapas con  pares clave-valor (nombre de columna → valor de celda).
      */
-    public List<Map<String, Object>> dataFilter(List<Map<String, String>> datos, Map<String, String> mapeoColumnas, String columnaAnoAcademico) {
+    public List<Map<String, Object>> dataFilter(List<Map<String, String>> data, Map<String, String> columnMapping, String academicYearColumn) {
         List<Map<String, Object>> resultado = new ArrayList<>();
 
-        for (Map<String, String> fila : datos) {
+        for (Map<String, String> fila : data) {
             Map<String, Object> filaFiltrada = new HashMap<>();
 
             for (String columna : fila.keySet()) {
-                if (mapeoColumnas.containsKey(columna) || columna.equals(columnaAnoAcademico)) {
+                if (columnMapping.containsKey(columna) || columna.equals(academicYearColumn)) {
                     filaFiltrada.put(columna, fila.get(columna));
                 }
             }

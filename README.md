@@ -64,6 +64,13 @@ Survey_Uploader_eQUALINF/
     - 🌐 Backend en `http://localhost:8080`
     - 🖥️ Frontend en `http://localhost:3000`
 
+## 📚 Javadoc
+
+La documentación del backend puede consultarse en `target/site/apidocs/index.html` tras ejecutar:
+
+```mvn javadoc:javadoc```
+
+
 ## ⚙️ Configuración de base de datos (db-config.properties)
 
 El backend accede a distintas bases de datos según el curso académico. Esto se configura en el archivo:

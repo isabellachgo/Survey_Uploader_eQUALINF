@@ -10,12 +10,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Servicio encargado de comunicarse con las bases de datos
+ */
 @Service
 public class DatabaseService {
 
     private final JdbcTemplate defaultJdbcTemplate;  // para obtener procesos e indicadores
     private final DBManagerService gestor;
 
+    /**
+     * Constructor de DatabaseService
+     * @param defaultJdbcTemplate conexion bbdd por defecto
+     * @param gestor gestor de multiples bbdd
+     */
     @Autowired
     public DatabaseService(JdbcTemplate defaultJdbcTemplate, DBManagerService gestor) {
         this.defaultJdbcTemplate = defaultJdbcTemplate;
@@ -73,13 +81,13 @@ public class DatabaseService {
      *   + se marca como válido
      *   + se actualizando la fecha de modificación a 'date'.
      *  </p>
-     * @param processId
-     * @param columnMapping
-     * @param data
-     * @param date
-     * @param attribute
-     * @param AttributeValueColumn
-     * @param academicYearColumn
+     * @param processId  ID del proceso cuyos indicadores se desean consultar.
+     * @param columnMapping Columnas mapeadas por el usuario
+     * @param data datos del archivo (tabla)
+     * @param date fecha de subida
+     * @param attribute atributo asociado a los indicadores
+     * @param AttributeValueColumn valor del atributo
+     * @param academicYearColumn columna que contiene los años academicos
      * @return Lista de resultados de la actialización. tipo UpdateResult
      */
     public List<UpdateResult> updateIndicatorInstance(
@@ -187,7 +195,7 @@ public class DatabaseService {
 
     /**
      * Recupera el código de un atributo cuyo id es 'id'.
-     * @param id
+     * @param id identificador del atributo
      * @return código del atributo
      */
     private String getAttributeCodingByID(String id) {
@@ -197,8 +205,8 @@ public class DatabaseService {
 
     /**
      * Recupera el código de un proceso cuyo id es 'id'.
-     * @param jdbcTemplate
-     * @param processId
+     * @param jdbcTemplate plantilla de la bbdd del año academico
+     * @param processId identificador del proceso
      * @return código del proceso
      */
     private String obtenerCodingProceso(JdbcTemplate jdbcTemplate, String processId) {
@@ -213,8 +221,8 @@ public class DatabaseService {
 
     /**
      *  Recupera el código de un indicador cuyo nombre es 'indicatorName'.
-     * @param jdbcTemplate
-     * @param indicatorName
+     * @param jdbcTemplate plantilla de la bbdd del año academico
+     * @param indicatorName nombre del indicador
      * @return código del indicador
      */
     private String obtenerCodingIndicator(JdbcTemplate jdbcTemplate, String indicatorName) {
@@ -229,7 +237,7 @@ public class DatabaseService {
 
     /**
      * Convierte un año académico 'valor' del formato 'AAAA-AA' a 'AAAA-AAAA'.
-     * @param valor
+     * @param valor año academico
      * @return  String del año transformado
      */
     private String transformDBYear(String valor) {
@@ -249,7 +257,7 @@ public class DatabaseService {
 
     /**
      *Convierte un año académico 'valor' del formato 'AAAA-AAAA' a 'AAAA-AA'.
-     * @param valor
+     * @param valor año academico
      * @return String del año transformado
      */
     private String transformValueYear(String valor) {

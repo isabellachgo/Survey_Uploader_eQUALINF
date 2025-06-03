@@ -13,7 +13,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Date;
 import java.util.*;
-
+/**
+ * Controlador de la aplicación, se comunica con el frontend y con los distintos servicios del backend.
+ */
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/file")
@@ -24,6 +26,15 @@ public class Controller {
     private final FilePreviewService previsualizationService;
     private final FileStorageService fileStorageService;
 
+    /**
+     * Constructor del controlador principal de la aplicación. Inyecta los servicios necesarios
+     * para el procesamiento, previsualización, almacenamiento y gestión de datos en la plataforma.
+     *
+     * @param fileProcessingService Servicio encargado de procesar los datos subidos.
+     * @param databaseService Servicio que gestiona el acceso y actualización de la base de datos.
+     * @param previsualizationService Servicio que permite la previsualización de archivos (CSV/Excel).
+     * @param fileStorageService Servicio que gestiona el almacenamiento de archivos.
+     */
     @Autowired
     public Controller(FileProcessingService fileProcessingService, DatabaseService databaseService,
                       FilePreviewService previsualizationService, FileStorageService fileStorageService) {

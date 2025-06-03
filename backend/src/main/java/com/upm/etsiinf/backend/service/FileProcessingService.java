@@ -5,16 +5,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Servicio que se encarga de aplicar el mapeo de las columnas y prepara los datos para enviarlos a la base de datos.
+ */
 @Service
 public class FileProcessingService {
+    /**
+     * Constructir por defecto.No realiza ninguna operación.
+     */
+    public FileProcessingService(){
+
+    }
 
     /**
      * Método auxiliar que filtra la lista de filas preprocesadas,
      * conservando únicamente las columnas indicadas en el mapeo y la que contiene los años académicos (necesaria para la conexión a la base de data).
-     * @param data
-     * @param columnMapping
-     * @param academicYearColumn
+     * @param data informacion guardada del archivo
+     * @param columnMapping columnas mapeadas por el usuario
+     * @param academicYearColumn  columna con los años academicos
      * @return lista de mapas con  pares clave-valor (nombre de columna → valor de celda).
      */
     public List<Map<String, Object>> dataFilter(List<Map<String, String>> data, Map<String, String> columnMapping, String academicYearColumn) {

@@ -16,18 +16,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * Servicio que se encarga de leer el archivo.
+ */
 @Service
 public class FilePreviewService {
+    /**
+     * Constructir por defecto.No realiza ninguna operación.
+     */
+    public FilePreviewService() {
+
+    }
 
     /**
      * Previsualiza el contenido de un archivo CSV subido por el usuario.
      *  <p>
      *  Lee las  filas del archivo y devuelve su contenido como una lista de mapas, donde cada mapa representa una fila del CSV
      *  con sus pares clave-valor (nombre de columna → valor de celda).
-     * @param file
+     * @param file atchivo a previsualizar
      * @return  Lista de mapas representando las filas del archivo.
-     * @throws IOException
+     * @throws IOException excepcion
      */
     public List<Map<String, String>> previsualizeCSV(MultipartFile file) throws IOException {
         List<Map<String, String>> rows = new ArrayList<>();
@@ -65,9 +73,9 @@ public class FilePreviewService {
      * <p>
      * Para cada hoja, se construye una lista de mapas, donde cada mapa representa una fila del Excel
      * como pares clave-valor (nombre de columna → valor de celda).
-     * @param file
+     * @param file archivo a previsualizar
      * @return Un mapa donde cada clave es el nombre de una hoja, y su valor es la lista de filas representadas como mapas.
-     * @throws IOException
+     * @throws IOException excepcion
      */
     public Map<String, List<Map<String, String>>> previsualizeExcelAllSheets(MultipartFile file) throws IOException {
         Map<String, List<Map<String, String>>> sheetsData = new LinkedHashMap<>();
@@ -87,7 +95,7 @@ public class FilePreviewService {
 
     /**
      * Comprueba si la información de una hoja tiene un formato correcto (tabular).
-     * @param sheetData
+     * @param sheetData hoja a comprobar
      * @return  {@code true} si es una hoja válida; {@code false} en caso contrario.
      */
     public static boolean isValidSheet(List<Map<String, String>> sheetData) {
@@ -98,7 +106,7 @@ public class FilePreviewService {
     /**
      * Lee una hoja de excel.
      * Para cada fila guarda en un mapanpares clave-valor (nombre de columna → valor de celda).
-     * @param sheet
+     * @param sheet hoja a comprobar
      * @return Lista de mapas representando las filas del archivo.
      */
     private List<Map<String, String>> processSheet(Sheet sheet) {
@@ -138,7 +146,7 @@ public class FilePreviewService {
     /**
      * Busca la fila donde empieza el encabezado del excel, ya que estos suelen traer información y/o isntrucciones antes.
      * <p> compara cada fila con la siguiente, evaluando si la fila actual podría representar un encabezado y si la siguiente contiene datos
-     * @param sheet
+     * @param sheet hoja del archivo
      * @return Indice de la fila que contiene los encabezados.
      */
     private int detectHeader(Sheet sheet) {
@@ -162,9 +170,9 @@ public class FilePreviewService {
     /**
      * Verifica que una fila es un encabezado.
      * <p> La fila de encabezados contiene más textos y la fila que le sigue más datos.
-     * @param row
-     * @param nextRow
-     * @param cols
+     * @param row fila candidata
+     * @param nextRow siguiente fila
+     * @param cols numero maximo de columnas que tienen las filas
      * @return {@code true} si es uuna fila de encabezado válida {@code false} en caso contrario.
      */
     private boolean isValidHeaderRow(Row row, Row nextRow, int cols) {
